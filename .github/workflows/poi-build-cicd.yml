@@ -1,0 +1,30 @@
+name: .NET - build - CI CD
+
+on:
+  push:
+    branches: [ main ]
+    paths: 
+      - apis/poi/**
+      - '.github/workflows/poi-build-cicd.yml'
+  pull_request:
+    branches: [ main ]
+    paths: 
+      - apis/poi/**
+      - '.github/workflows/poi-build-cicd.yml'
+jobs:
+  build_and_test:
+
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v2
+    - name: Setup .NET Core
+      uses: actions/setup-dotnet@v1
+      with:
+        dotnet-version: 5.0.x
+    - name: Restore dependencies
+      run: dotnet restore apis/poi/web/*.csproj
+    - name: Build
+      run: dotnet build --configuration Release --no-restore apis/poi/web/*.csproj
+    - name: Test
+      run: dotnet test --no-restore --verbosity normal apis/poi/tests/UnitTests /p:CollectCoverage=true /p:CoverletOutput=lcov/ /p:CoverletOutputFormat=lcov 
