@@ -1,5 +1,17 @@
 name: .NET - build - CI CD
 
+env:
+  #poi_path: apis/poi/**
+  #registry: openhackggp0ljh0acr.azurecr.io
+  #repository: devopsoh/api-poi
+  #docker_path: apis/poi/web
+  #staging_url: https://openhackggp0ljh0poi-staging.azurewebsites.net
+  #prod_url: https://openhackggp0ljh0poi.azurewebsites.net
+  #resource_group: openhackggp0ljh0rg
+  #webapp_name: openhackggp0ljh0poi
+  build_name: POI
+  #acr_username: openhackggp0ljh0acr
+  
 on:
   push:
     branches: [ main ]
@@ -27,4 +39,18 @@ jobs:
     - name: Build
       run: dotnet build --configuration Release --no-restore apis/poi/web/*.csproj
     - name: Test
-      run: dotnet test --no-restore --verbosity normal apis/poi/tests/UnitTests /p:CollectCoverage=true /p:CoverletOutput=lcov/ /p:CoverletOutputFormat=lcov 
+      run: dotnet test --no-restore --verbosity normal apis/poi/tests/UnitTests /p:CollectCoverage=true /p:CoverletOutput=lcov/ /p:CoverletOutputFormat=lcov
+      
+    - uses: actions/github-script@0.9.0
+      if: failure()
+      with:
+        github-token: ${{secrets.GITHUBTOKEN}}
+        script: |
+          let body = "${{ env.build_name }} Worflow Failure \n Build Number: ${{ github.run_number }} \n Build Log: https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }} \n SHA: [${{ github.sha }}](https://github.com/${{ github.repository }}/commit/${{ github.sha }}) \n";
+          github.issues.create({
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            title: "${{ env.build_name }} Workflow ${{ github.run_number }} Failed! ",
+            assignees: [ '${{ github.actor }}' ],
+            body: 'POI Build failed'
+          });
