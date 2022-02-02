@@ -54,3 +54,39 @@ jobs:
             assignees: [ '${{ github.actor }}' ],
             body: 'POI Build failed'
           });
+          
+  ### The following code builds the docker image and pushes it to ACR #####
+  docker_build_and_push:
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    needs: build_and_test
+    steps:     
+    - uses: actions/checkout@v2
+    - name: Docker login
+      uses: Azure/docker-login@v1     
+      with:
+        #ACR name
+        username: ${{ secrets.ACR_LOGIN }}
+        #ACR password
+        password: ${{ secrets.ACR_KEY }}
+        #ACR URL
+        login-server: ${{ secrets.ACR_REGISTRY }}
+      #run: docker login $registry -u ${{ secrets.DOCKER_USER }} -p ${{ secrets.GITHUBTOKEN }}
+
+    - name: Docker build
+      run: docker build -t $registry/$repository:${{github.run_number}} --build-arg build_version=${{github.run_number}} $docker_path
+
+    - name: Docker Push
+      run: docker push $registry/$repository:${{github.run_number}}  
+    - uses: actions/github-script@0.9.0
+      if: failure()
+      with:
+        github-token: ${{secrets.GITHUBTOKEN}}
+        script: |
+          let body = "${{ env.build_name }} Worflow Failure \n Build Number: ${{ github.run_number }} \n Build Log: https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }} \n SHA: [${{ github.sha }}](https://github.com/${{ github.repository }}/commit/${{ github.sha }}) \n";
+          github.issues.create({
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            title: "${{ env.build_name }} Workflow ${{ github.run_number }} Failed! ",
+            body: body
+          });
