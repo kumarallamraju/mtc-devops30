@@ -2,8 +2,8 @@ name: .NET - build - CI CD
 
 env:
   #poi_path: apis/poi/**
-  #registry: openhackggp0ljh0acr.azurecr.io
-  #repository: devopsoh/api-poi
+  registry: openhackqt19rvo1acr.azurecr.io
+  repository: devopsoh/api-poi
   #docker_path: apis/poi/web
   #staging_url: https://openhackggp0ljh0poi-staging.azurewebsites.net
   #prod_url: https://openhackggp0ljh0poi.azurewebsites.net
