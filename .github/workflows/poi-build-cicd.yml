@@ -92,7 +92,7 @@ jobs:
           });
 
 
-### The following code Deploys to Staging Slot. #####
+### The following code Deploys to Staging Slot. Building on 2/3/22 #####
   deploy_to_staging_slot:
     #if: github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
