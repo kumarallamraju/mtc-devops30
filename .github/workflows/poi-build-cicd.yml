@@ -1,14 +1,14 @@
 name: .NET - build - CI CD
 
 env:
-  #poi_path: apis/poi/**
+  poi_path: apis/poi/**
   registry: openhackqt19rvo1acr.azurecr.io
   repository: devopsoh/api-poi
   docker_path: apis/poi/web
-  #staging_url: https://openhackggp0ljh0poi-staging.azurewebsites.net
+  staging_url: https://openhackqt19rvo1poi-staging.azurewebsites.net
   #prod_url: https://openhackggp0ljh0poi.azurewebsites.net
-  #resource_group: openhackggp0ljh0rg
-  #webapp_name: openhackggp0ljh0poi
+  resource_group: openhackqt19rvo1rg
+  webapp_name: openhackqt19rvo1poi
   build_name: POI
   #acr_username: openhackggp0ljh0acr
   
@@ -84,6 +84,42 @@ jobs:
         github-token: ${{secrets.GITHUBTOKEN}}
         script: |
           let body = "${{ env.build_name }} Worflow Failure \n Build Number: ${{ github.run_number }} \n Build Log: https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }} \n SHA: [${{ github.sha }}](https://github.com/${{ github.repository }}/commit/${{ github.sha }}) \n";
+          github.issues.create({
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            title: "${{ env.build_name }} Workflow ${{ github.run_number }} Failed! ",
+            body: body
+          });
+
+
+### The following code Deploys to Staging Slot. #####
+  deploy_to_staging_slot:
+    #if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    needs: docker_build_and_push
+    steps:
+    - name: Azure Login
+      uses: Azure/login@v1.1
+      with:
+        creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+    - name: Deploy to Azure WebApp staging slot
+      uses: Azure/webapps-deploy@v2
+      with:
+        app-name: ${{ env.webapp_name }} 
+        slot-name: staging
+        #images: openhackggp0ljh0acr.azurecr.io/devopsoh/api-poi:${{ github.run_number }} 
+        images: ${{ env.registry }}/${{ env.repository }}:${{ github.run_number }}   
+ 
+    - name: Azure Logout
+      run: az logout
+      
+    - uses: actions/github-script@0.9.0
+      if: failure()
+      with:
+        github-token: ${{secrets.GITHUBTOKEN}}
+        script: |
+          let body = "${{ env.build_name }} Worflow Failure  \n Build Number: ${{ github.run_number }} \n Build Log: https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }} \n SHA: [${{ github.sha }}](https://github.com/${{ github.repository }}/commit/${{ github.sha }}) \n";
           github.issues.create({
             owner: context.repo.owner,
             repo: context.repo.repo,
