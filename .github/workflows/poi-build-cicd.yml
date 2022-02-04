@@ -1,4 +1,4 @@
-name: .NET - build - CI CD
+name: .NET - build - CI CD - swap - rollback
 
 env:
   poi_path: apis/poi/**
