@@ -1,0 +1,49 @@
+name: Trips CI
+
+env:
+  registry: openhackggp0ljh0acr.azurecr.io
+  repository: devopsoh/api-trips
+  docker_path: apis/trips
+  staging_url: https://openhackggp0ljh0trips-staging.azurewebsites.net
+  prod_url: https://openhackggp0ljh0trips.azurewebsites.net
+  resource_group: openhackggp0ljh0rg
+  webapp_name: openhackggp0ljh0trips
+  build_name: Trips
+  webv_path: apis/trips/webvalidate
+
+on:
+  push:
+    branches: [ main ]
+    paths: 
+      - apis/trips/**  
+      - '.github/workflows/trips-build-cicd.yaml'
+  pull_request:
+    branches: [ main ]
+    paths: 
+      - apis/trips/**
+      - '.github/workflows/trips-build-cicd.yaml'
+
+jobs:
+  build_and_test:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        shell: bash
+        working-directory: apis/trips    
+    steps:
+    - uses: actions/checkout@v2
+
+    - name: Setup Go environment
+      uses: actions/setup-go@v2.0.3
+      with:
+        go-version: 1.12
+
+    - name: Install Go dependencies
+      run: go get
+      
+    - name: Build
+      run: go build -v
+      working-directory: apis/trips
+      
+    - name: Run Unit Tests
+      run: go test ./tests
